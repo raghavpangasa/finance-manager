@@ -1,0 +1,40 @@
+{% extends "admin/base.html" %}
+{% load i18n %}
+
+{% load static %}
+    {% block extrahead %}
+        {% block js_files %}{% endblock js_files %}
+    {% endblock %}
+
+
+    {% block title %}{{ title|escape }} | {% trans 'Finance Manager App' %}
+    {% endblock %}
+
+    {% block branding %}
+        <h1 id="site-name">{% trans 'Finance Manager App' %}</h1>
+    {% endblock %}
+
+    {% block breadcrumbs %}
+    <div class="breadcrumbs">
+        <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+        &rsaquo; {% block this-breadcrumb %}{% endblock this-breadcrumb %}
+    </div>
+    {% endblock %}
+
+    {% block nav-global  %}
+        {{ block.super }}
+                    <a id="links" href="{% url 'dashboard' %}">Dashboard</a>
+                    <a id="links" href="{% url 'investment-summary' %}">Investment Analysis</a>
+                    <a id="links" href="{% url 'expense-summary' %}">Expense Analysis</a>
+                    <a id="links" href="/admin/tracker/investment/">Show Investments</a>
+                    <a id="links" href="/admin/tracker/investment/add/">Add Investment</a>
+                    <a id="links" href="/admin/tracker/expense/">Show Expenses</a>
+                    <a id="links" href="/admin/tracker/expense/add/">Add Expense</a>
+
+    {% endblock nav-global %}
+
+    {% block content %}
+        <div id="content">
+            {% block my-content %}{% endblock my-content %}
+        </div>
+    {% endblock content %}

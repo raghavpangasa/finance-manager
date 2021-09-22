@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}Finance Manager - Investment Analytics{% endblock title %}
+
+{% block js_files %}
+    <script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+
+{% endblock js_files %}
+
+{% block this-breadcrumb %}
+    <a id="links" href="{% url 'investment-summary' %}">Investment Analysis</a>
+{% endblock this-breadcrumb %}
+
+
+{% block my-content %}
+
+    <h1>Total Amount Invested: Rs. {{data.investments_by_types.total_invested_amount}}</h1>
+    <br />
+
+    <h1>Total Investment Distribution</h1>
+
+    <div id="all-investment-chart" style="width: 25rem;height:10rem;padding-top:0.5rem;"></div>
+
+    <div id="monthly-distribution-containers" style="padding-top:2rem;">
+        <h1>Monthly Investment Distribution</h1>
+        {% for month in data.investments_by_month %}
+            <div class="float-container-monthly">
+                <div id="all-data">
+                    <div id="distribution-containers">
+                        <h5 style="padding-botton:1rem;">{{month.name}}</h5>
+                        <div id="chart-container-{{month.var_name}}" style="width: 25rem;height:10rem;padding-top:0.5rem;padding-botton:1rem;"></div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+
+
+    <script>
+        var chart_data = [];
+        {% for inv_type in data.investments_by_types.distribution %}
+            var d = {};
+            d.label = "{{inv_type.name}}";
+            d.y = {% if inv_type.amount %}{{inv_type.amount}}{% else %}0{% endif %};
+            chart_data.push(d)
+        {% endfor %}
+
+        var chart = new CanvasJS.Chart("all-investment-chart", {
+            animationEnabled: true,
+            data: [{
+                type: "pie",
+                startAngle: 240,
+                yValueFormatString: "##0.00\"\"",
+                indexLabel: "{label} Rs.{y}",
+                dataPoints: chart_data
+            }]
+        });
+        chart.render();
+
+        {% for month in data.investments_by_month %}
+
+            var data_points = []
+            {% for inv_type in month.investments.distribution %}
+                var dict = {"label": "{{inv_type.name}}" , y: {% if inv_type.amount %}{{inv_type.amount}}{% else %}0{% endif %} }
+                data_points.push(dict)
+            {% endfor %}
+            var chart = new CanvasJS.Chart("chart-container-{{month.var_name}}", {
+                animationEnabled: true,
+                data: [{
+                    type: "pie",
+                    startAngle: 240,
+                    yValueFormatString: "##0.00\"\"",
+                    indexLabel: "{label} Rs.{y}",
+                    dataPoints:  data_points
+                    }]
+                });
+            chart.render();
+        {% endfor %}
+
+
+
+    </script>
+
+{% endblock my-content%}

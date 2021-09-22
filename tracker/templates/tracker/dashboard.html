@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% block title %}Finance Manager - Dashboard{% endblock title %}
+
+{% comment %} {% block title %}Finance Manager - Dashboard{% endblock title %} {% endcomment %}
+{% block js_files %}
+    <script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+
+    <style>
+    
+        #monthly-distribution-containers{
+            margin-top: 2rem;
+            border: 3px solid #fff;
+            height:100rem;
+        }
+
+        #overview{
+            border: 3px solid #fff;
+        }
+        #monthly-data{
+            margin-top:2rem;
+        }
+        .float-container {
+            padding: 20px;
+            height: 20rem;
+        }
+        .float-child {
+            width: 45%;
+            float: left;
+            padding: 20px;
+            height: 20rem;
+        }  
+        .float-container-monthly {
+            padding: 20px;
+            height: 14rem;
+        }
+        .float-child-monthly {
+            width: 45%;
+            float: left;
+            padding: 20px;
+            height: 14rem;
+        }  
+        #distribution-containers{
+            padding-left: 2rem;
+            height: 12rem;
+            width: 27rem;
+            margin-bottom: 1rem;
+        }
+    </style>
+{% endblock js_files %}
+
+{% block this-breadcrumb %}
+    <a id="links" href="{% url 'dashboard' %}">Dashboard</a>
+{% endblock this-breadcrumb %}
+
+
+{% block my-content %}
+
+    <div class="float-container" id="overview">
+
+        <div class="float-child" id="all-data">
+            <h1>Overall Data</h1>
+            <div id="chart-container" style="width: 25rem;height:10rem;padding-top:2rem;"></div>          
+        </div>
+        
+        <div class="float-child" id="avg-data" style="padding-top:2rem;margin-top:3rem;">
+            <h2>Average Data</h2>
+            <p> Average Invested : Rs. {{overall_data.average.avg_invested}} </p>
+            <p> Average Spent : Rs. {{overall_data.average.avg_spent}} </p>
+            <p> Average Saved : Rs. {{overall_data.average.avg_saved}} </p>
+        </div>
+    
+    </div>
+
+
+    <div id="monthly-distribution-containers">
+        <h1 style="padding-left:2rem;padding-top:3rem;">Monthly Distribution</h1>
+        {% for month in monthly_report %}
+            <div class="float-container-monthly">
+                <div id="all-data">
+                    <div class="float-child-monthly" id="distribution-containers">
+                        <h5 style="padding-bottom:1rem;">{{month.name}}</h5>
+                        <div id="chart-container-{{month.var_name}}" style="width: 25rem;height:10rem;padding-top:0.5rem;"></div>
+                    </div>
+                    <div class="float-child-monthly" id="monthly-data">
+                        <p> Total Invested : Rs. {{month.data.invested}} </p>
+                        <p> Total Spent : Rs. {{month.data.spent}} </p>
+                        <p> Total Saved : Rs. {{month.data.saved}} </p>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+
+    <script>
+        var chart_data = [
+            {label: "Invested", y: {{overall_data.total.total_investment}} },
+            {label: "Spent", y: {{overall_data.total.total_spent}}},
+            {label: "Saved", y: {% if overall_data.total.total_saved > 0  %}{{overall_data.total.total_saved}}{% else %}0{% endif %}}
+        ];
+
+        var chart = new CanvasJS.Chart("chart-container", {
+            animationEnabled: true,
+            data: [{
+                type: "pie",
+                startAngle: 240,
+                yValueFormatString: "##0.00\"\"",
+                indexLabel: "{label} Rs.{y}",
+                dataPoints: chart_data
+            }]
+        });
+        chart.render();
+
+        {% for month in monthly_report %}
+            var chart = new CanvasJS.Chart("chart-container-{{month.var_name}}", {
+                animationEnabled: true,
+                data: [{
+                    type: "pie",
+                    startAngle: 240,
+                    yValueFormatString: "##0.00\"\"",
+                    indexLabel: "{label} Rs.{y}",
+                    dataPoints:  [
+                            {label : "Invested", y: {{month.data.invested}} },
+                            {label : "Spent", y: {{month.data.spent}} },
+                            {label : "Saved", y: {% if overall_data.total.total_saved > 0  %}{{month.data.saved}}{% else %}0{% endif %} }
+                            ]
+                    }]
+                });
+            chart.render();
+        {% endfor %}
+
+
+    </script>
+    
+{% endblock my-content %}
+
+

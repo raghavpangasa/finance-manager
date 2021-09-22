@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}Finance Manager - Expenses Analytics{% endblock title %}
+
+{% block js_files %}
+    <script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+{% endblock js_files %}
+
+{% block this-breadcrumb %}
+    <a id="links" href="{% url 'expense-summary' %}">Expense Analysis</a>
+
+    <style>
+        .charts {
+            height: 14rem;
+            padding-left: 1rem;
+        }
+        .chart {
+            width: 45%;
+            float: left;
+        }  
+        .monthly-data{
+            border: 3px solid #fff;
+            padding-left:1rem;
+            padding-top:1rem;
+            height:100%;
+            margin-bottom:2rem;
+        }
+    
+    </style>
+
+{% endblock this-breadcrumb %}
+
+
+{% block my-content %}
+
+    <h1>Monthly Expense Distribution</h1>
+
+    <div id="expenses-content">
+        {% for month in data %}
+            <div class="monthly-data">
+                <h3>{{month.name}}</h3>
+                <h4>Total Amount Spent: Rs. {{month.amount}}</h4>
+                <div class="charts">
+                    <div id="type_distribution">
+                        <div class="chart" id="pie-chart-container-{{month.var_name}}" style="width:25%;height:10rem;padding-top:1rem;"></div>
+                    </div>        
+                    <div id="tag_distribution">
+                        <div class="chart" id="bar-chart-container-{{month.var_name}}" style="width:65%;height:10rem;padding-top:1rem;padding-left:2rem;"></div>
+                    </div>     
+                </div>
+            </div>   
+        {% endfor %}
+        
+    </div>
+
+
+    <script>
+
+        {% for month in data %}
+            var pie_chart_data = []
+            {% for exp_type in month.expenses_by_type %}
+                var dict = {"label": "{{exp_type.name}}" , y: {% if exp_type.amount %}{{exp_type.amount}}{% else %}0{% endif %} }
+                pie_chart_data.push(dict)
+            {% endfor %}
+            var pie_chart = new CanvasJS.Chart("pie-chart-container-{{month.var_name}}", {
+                animationEnabled: true,
+                data: [{
+                    type: "pie",
+                    startAngle: 240,
+                    yValueFormatString: "##0.00\"\"",
+                    indexLabel: "{label} Rs.{y}",
+                    dataPoints: pie_chart_data
+                }]
+            });
+            pie_chart.render();
+
+            var bar_chart_data = []
+            {% for exp_tag in month.expenses_by_tag %}
+                var dict = {"label": "{{exp_tag.name}}" , y: {% if exp_tag.amount %}{{exp_tag.amount}}{% else %}0{% endif %} }
+                bar_chart_data.push(dict)
+            {% endfor %}
+
+            var bar_chart = new CanvasJS.Chart("bar-chart-container-{{month.var_name}}", {
+                animationEnabled: true,
+                theme: "light2", // "light1", "light2", "dark1", "dark2"
+                data: [{        
+                    type: "column",  
+                    legendMarkerColor: "grey",
+                    dataPoints: bar_chart_data
+                }]
+            });
+            bar_chart.render();
+        {% endfor %}
+
+
+    
+    
+    </script>
+    
+{% endblock my-content%}

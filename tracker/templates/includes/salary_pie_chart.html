@@ -1,0 +1,14 @@
+<div id="container" style="width: 100%; height: 100%"></div>
+<script>
+    anychart.onDocumentReady(function() {
+        var data = [
+            {x: "Invested", value: {{overall_data.total.total_investment}} },
+            {x: "Spent", value: {{overall_data.total.total_spent}}},
+            {x: "Saved", value: {{overall_data.total.total_saved}}},
+        ];
+        var chart = anychart.pie();
+        chart.data(data);
+        chart.container('container');
+        chart.draw();
+        });
+</script>
