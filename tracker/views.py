@@ -44,7 +44,7 @@ def get_specific_data(selected_month, selected_year):
     return data
 
 def get_monthly_report():
-    all_data = MoneyTracker.objects.all().exclude(month="August",year=2021)
+    all_data = MoneyTracker.objects.all().exclude(month="August",year=2021).order_by('-creation_time')
     data = []
     for monthly_tracker in all_data:
         data_key = monthly_tracker.month + " - " + str(monthly_tracker.year)
@@ -86,7 +86,7 @@ def get_investments_by_type(investments):
     return result
 
 def get_investments_by_month(investments):
-    all_data = MoneyTracker.objects.exclude(month="August",year=2021)
+    all_data = MoneyTracker.objects.exclude(month="August",year=2021).order_by('-creation_time')
     data = []
     for monthly_tracker in all_data:
         filtered_investments = investments.filter(date__year = monthly_tracker.year, date__month = list(calendar.month_name).index(monthly_tracker.month))
@@ -135,7 +135,7 @@ def get_expenses_by_tag(expenses):
 def get_expense_summary(request):
     all_expenses = Expense.objects.all()
     data = []
-    all_data = MoneyTracker.objects.exclude(month="August",year=2021)
+    all_data = MoneyTracker.objects.exclude(month="August",year=2021).order_by('-creation_time')
     for monthly_tracker in  all_data:
         filtered_expenses = all_expenses.filter(date__year = monthly_tracker.year, date__month = list(calendar.month_name).index(monthly_tracker.month))
         data_key = monthly_tracker.month + " - " + str(monthly_tracker.year)

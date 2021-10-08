@@ -9,6 +9,7 @@ class SalaryModelAdmin(admin.ModelAdmin):
 class MoneyTrackerAdmin(admin.ModelAdmin):
     list_display = ("month","year", "salary_model", "actual_inhand" )
     change_list_template = "admin/add_admin_buttons.html"
+    exclude = ('creation_time',)
 
 class ExpenseAdmin(admin.ModelAdmin):
     list_display = ("name","expense_type", "amount")

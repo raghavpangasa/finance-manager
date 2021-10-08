@@ -3,6 +3,7 @@ import calendar
 from django.db.models import Sum
 from django.db.models.signals import post_save
 from django.dispatch import  receiver
+from datetime import date
 
 INVESTMENT_TYPE = (
     ("GOLD", "GOLD"),
@@ -61,12 +62,15 @@ class MoneyTracker(models.Model):
     expenses = models.FloatField(default=0)
     invested = models.FloatField(default=0)
     saved = models.FloatField(default=0)
+    creation_time = models.DateField(blank=True, null=True)
 
     def __str__(self):
         return self.month + ", " + str(self.year)
     
     def save(self):
         self.saved = self.actual_inhand - self.expenses - self.invested
+        if not self.creation_time:
+            self.creation_time = date.today()
         return super().save()
 
 class ExpenseTypeTag(models.Model):
@@ -96,7 +100,7 @@ class Expense(models.Model):
         current_month.save()
 
     def save(self):
-        self.calculate()
+        # self.calculate()
         return super().save()
 
 @receiver(post_save,sender=Expense)
@@ -120,7 +124,6 @@ class Investment(models.Model):
         current_month.save()
 
     def save(self):
-        self.calculate()
         return super().save()
     
     def post_save(self):
