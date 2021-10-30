@@ -11,6 +11,7 @@ INVESTMENT_TYPE = (
     ("SMALLCASE", "SMALLCASE"),
     ("STOCKS", "STOCKS"),
     ("CRYPTO", "CRYPTO"),
+    ("PPF", "PPF"),
     ("OTHER", "OTHER")
 )
 
