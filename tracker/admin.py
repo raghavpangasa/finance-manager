@@ -2,6 +2,17 @@ from django.contrib import admin
 from tracker.models import *
 from  django.contrib.auth.models  import User, Group
 
+
+class BankAccountAdmin(admin.ModelAdmin):
+    list_display = ("bank","balance")
+    change_list_template = "admin/add_distribute_buttons.html"
+
+    def changelist_view(self, request, extra_context=None):
+        total = BankAccount.objects.aggregate(total=Sum('balance'))['total'] 
+        context = { 'total': str(round(total, 2)), } 
+        return super(BankAccountAdmin, self).changelist_view(request, extra_context=context)
+
+
 class SalaryModelAdmin(admin.ModelAdmin):
     list_display = ("name_of_the_company","position", "in_hand_salary")
     change_list_template = "admin/add_admin_buttons.html"
@@ -22,6 +33,8 @@ class InvestmentAdmin(admin.ModelAdmin):
     change_list_template = "admin/add_admin_buttons.html"
 
 
+admin.site.register(BankAccount, BankAccountAdmin)
+admin.site.register(PaymentMethod)
 admin.site.register(SalaryModel, SalaryModelAdmin)
 admin.site.register(MoneyTracker, MoneyTrackerAdmin)
 admin.site.register(Expense, ExpenseAdmin)
