@@ -187,3 +187,16 @@ class Investment(models.Model):
 @receiver(post_save,sender=Investment)
 def recalculate(sender, instance, created, **kwargs):
     instance.calculate()
+
+class Refund(models.Model):
+    amount = models.DecimalField(max_digits=100, decimal_places=2)
+    source = models.CharField(max_length=250)
+    bank_account = models.ForeignKey(BankAccount, on_delete=CASCADE,related_name="refund_bank_account",blank=True, null=True)
+    date = models.DateField()
+    creation_time = models.DateField(null=True, blank=True)
+
+    def save(self):
+        if not self.creation_time:
+            self.creation_time = self.date
+            self.bank_account.credit(self.amount)
+        return super().save()

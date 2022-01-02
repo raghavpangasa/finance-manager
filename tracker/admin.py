@@ -2,7 +2,11 @@ from django.contrib import admin
 from tracker.models import *
 from  django.contrib.auth.models  import User, Group
 
-
+class RefundAdmin(admin.ModelAdmin):
+    list_display = ("source","amount","bank_account")
+    list_filter = ("source","date","bank_account")
+    exclude = ('creation_time',)
+    
 class BankAccountAdmin(admin.ModelAdmin):
     list_display = ("bank","balance")
     change_list_template = "admin/add_distribute_buttons.html"
@@ -39,6 +43,7 @@ admin.site.register(SalaryModel, SalaryModelAdmin)
 admin.site.register(MoneyTracker, MoneyTrackerAdmin)
 admin.site.register(Expense, ExpenseAdmin)
 admin.site.register(Investment, InvestmentAdmin)
+admin.site.register(Refund, RefundAdmin)
 admin.site.register(ExpenseTypeTag)
 
 admin.site.unregister(User)
