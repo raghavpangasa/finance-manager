@@ -19,10 +19,10 @@ def get_total_report():
             "total_saved": total_saved,
         },
         "average":{
-            "avg_invested": round(total_invested/num_months,2),
-            "avg_spent": round(total_spent/num_months,2),
-            "avg_saved": round(total_saved/num_months,2),
-            "avg_inhand": round(total_inhand/num_months,2)
+            "avg_invested": round(total_invested/num_months,2) if num_months != 0 else 0 ,
+            "avg_spent": round(total_spent/num_months,2) if num_months != 0 else 0 ,
+            "avg_saved": round(total_saved/num_months,2) if num_months != 0 else 0 ,
+            "avg_inhand": round(total_inhand/num_months,2) if num_months != 0 else 0
         },
         "percentage":{
             "perc_invested": round(total_invested*100/total_inhand,2),
