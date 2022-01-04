@@ -7,11 +7,20 @@
     {{ block.super }}
     <br />
     <br />
-    <button type="button" style="width:20%;border:none;padding:5px;margin-right:1rem;background-color:#264b5d">
-        <a style="color:white;padding:5px;font-family:'Roboto';" href="{% url 'funds-distribute' %}">Auto Distribute Funds</a></button>
+    <button type="button" style="width:20%;border:none;padding:5px;margin-right:1rem;background-color:#264b5d" 
+        onclick="return confirm('Do you want to distribute the funds?');">
+            <a style="color:white;padding:5px;font-family:'Roboto';" href="{% url 'funds-distribute' %}">
+                Auto Distribute Funds
+            </a>
+    </button>
 
-    <button type="button" style="width:20%;border:none;padding:5px;margin-right:1rem;background-color:#264b5d">
-            <a style="color:white;padding:5px;font-family:'Roboto';" href="{% url 'undo-funds-distribute' %}">Undo Auto Distribution</a></button>      
+    <button type="button" style="width:20%;border:none;padding:5px;margin-right:1rem;background-color:#264b5d"
+        onclick="return confirm('Do you want to undo the distributed the funds?');">
+            <a style="color:white;padding:5px;font-family:'Roboto';" href="{% url 'undo-funds-distribute' %}">
+                Undo Auto Distribution
+            </a>
+    </button>
+         
     <br />
     <br />
 {% endblock %}

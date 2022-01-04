@@ -4,6 +4,8 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.db.models import Sum
 from django.contrib.auth.decorators import login_required
 from datetime import  datetime
+from django.contrib import messages
+
 
 def get_total_report():
     total_actual_invested = MoneyTracker.objects.aggregate(Sum('invested'))["invested__sum"]
@@ -155,6 +157,7 @@ def get_expense_summary(request):
     return render(request, "tracker/expenses.html", context={"data":data})
 
 def funds_distribute(request):
+    messages.info(request, 'Your funds has been distributed successfully!')
     current_month = MoneyTracker.objects.get(month=calendar.month_name[datetime.now().month], year=datetime.now().year)
     current_month.distribute()
     return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))

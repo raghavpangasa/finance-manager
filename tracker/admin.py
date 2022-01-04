@@ -36,6 +36,9 @@ class InvestmentAdmin(admin.ModelAdmin):
     list_filter = ("investment_type","date")
     change_list_template = "admin/add_admin_buttons.html"
 
+class TransactionAdmin(admin.ModelAdmin):
+    list_display = ("id","from_bank","to_bank", "amount", "transaction_date")
+    exclude = ('creation_time',)
 
 admin.site.register(BankAccount, BankAccountAdmin)
 admin.site.register(PaymentMethod)
@@ -45,6 +48,7 @@ admin.site.register(Expense, ExpenseAdmin)
 admin.site.register(Investment, InvestmentAdmin)
 admin.site.register(Refund, RefundAdmin)
 admin.site.register(ExpenseTypeTag)
+admin.site.register(Transaction, TransactionAdmin)
 
 admin.site.unregister(User)
 admin.site.unregister(Group)

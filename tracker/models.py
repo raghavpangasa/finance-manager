@@ -64,6 +64,29 @@ class BankAccount(models.Model):
     # def get_total(self):
     #     return BankAccount.objects.all().aggregate(Sum('balance'))["balance__sum"]
 
+class Transaction(models.Model):
+    from_bank = models.ForeignKey(BankAccount, on_delete=models.CASCADE,related_name="from_bank")
+    to_bank = models.ForeignKey(BankAccount, on_delete=models.CASCADE,related_name="to_bank")
+    amount = models.IntegerField()
+    transaction_date = models.DateField()
+    creation_time = models.DateField()
+
+    def save(self):
+        if not self.creation_time:
+            self.creation_time = date.today()
+            self.from_bank.debit(self.amount)
+            self.to_bank.credit(self.amount)
+        return super().save()
+
+
+def new_transaction(to_bank,from_bank,amount):
+    new_transaction = Transaction()
+    new_transaction.from_bank = from_bank
+    new_transaction.to_bank = to_bank
+    new_transaction.amount = amount
+    new_transaction.transaction_date = date.today()
+    new_transaction.save()
+
 class PaymentMethod(models.Model):
     type = models.CharField(max_length=150, choices=PAYMENT_METHODS, default="Debit Card")
     bank_account = models.ForeignKey(BankAccount, on_delete=models.CASCADE,related_name="bank_payment_method")
@@ -106,16 +129,12 @@ class MoneyTracker(models.Model):
         return self.month + ", " + str(self.year)
 
     def distribute(self):
-        total = BankAccount.objects.all().aggregate(Sum('monthly_inflow'))["monthly_inflow__sum"]
-        self.salary_account.debit(total)
-        for bank in BankAccount.objects.all():
-            bank.credit(bank.monthly_inflow)
+        for bank in BankAccount.objects.all().exclude(bank=self.salary_account.bank):
+            new_transaction(bank, self.salary_account, bank.monthly_inflow)
 
     def undo_distribute(self):
-        total = BankAccount.objects.all().aggregate(Sum('monthly_inflow'))["monthly_inflow__sum"]
-        self.salary_account.credit(total)
-        for bank in BankAccount.objects.all():
-            bank.debit(bank.monthly_inflow)
+        for bank in BankAccount.objects.all().exclude(bank=self.salary_account.bank):
+            new_transaction(self.salary_account, bank, bank.monthly_inflow)
     
     def save(self):
         self.saved = self.actual_inhand - self.expenses - self.invested
