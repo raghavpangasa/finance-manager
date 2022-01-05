@@ -1,8 +1,11 @@
 from django.shortcuts import render
 from .models import *
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.db.models import Sum
 from django.contrib.auth.decorators import login_required
+from datetime import  datetime
+from django.contrib import messages
+
 
 def get_total_report():
     total_actual_invested = MoneyTracker.objects.aggregate(Sum('invested'))["invested__sum"]
@@ -18,10 +21,10 @@ def get_total_report():
             "total_saved": total_saved,
         },
         "average":{
-            "avg_invested": round(total_invested/num_months,2),
-            "avg_spent": round(total_spent/num_months,2),
-            "avg_saved": round(total_saved/num_months,2),
-            "avg_inhand": round(total_inhand/num_months,2)
+            "avg_invested": round(total_invested/num_months,2) if num_months != 0 else 0 ,
+            "avg_spent": round(total_spent/num_months,2) if num_months != 0 else 0 ,
+            "avg_saved": round(total_saved/num_months,2) if num_months != 0 else 0 ,
+            "avg_inhand": round(total_inhand/num_months,2) if num_months != 0 else 0
         },
         "percentage":{
             "perc_invested": round(total_invested*100/total_inhand,2),
@@ -109,7 +112,6 @@ def get_investment_summary(request):
     }
     return render(request, "tracker/investments.html", context)
 
-
 def get_expenses_by_type(expenses):
     result = []
     for expense_type in EXPENSE_TYPE:
@@ -153,3 +155,14 @@ def get_expense_summary(request):
 
 
     return render(request, "tracker/expenses.html", context={"data":data})
+
+def funds_distribute(request):
+    messages.info(request, 'Your funds has been distributed successfully!')
+    current_month = MoneyTracker.objects.get(month=calendar.month_name[datetime.now().month], year=datetime.now().year)
+    current_month.distribute()
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+
+def undo_funds_distribute(request):
+    current_month = MoneyTracker.objects.get(month=calendar.month_name[datetime.now().month], year=datetime.now().year)
+    current_month.undo_distribute()
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
