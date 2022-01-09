@@ -30,15 +30,20 @@ class ExpenseAdmin(admin.ModelAdmin):
     list_display = ("name","expense_type", "amount", "comments")
     list_filter = ("expense_type","date","tags")
     change_list_template = "admin/add_admin_buttons.html"
+    exclude = ('creation_time',)
 
 class InvestmentAdmin(admin.ModelAdmin):
     list_display = ("name","investment_type", "amount", "comments")
     list_filter = ("investment_type","date")
     change_list_template = "admin/add_admin_buttons.html"
+    exclude = ('creation_time',)
 
 class TransactionAdmin(admin.ModelAdmin):
     list_display = ("id","from_bank","to_bank", "amount", "transaction_date")
     exclude = ('creation_time',)
+
+class InvestmentPortfolioAdmin(admin.ModelAdmin):
+    list_display = ("name","invested","current_value","roi","last_updated")
 
 admin.site.register(BankAccount, BankAccountAdmin)
 admin.site.register(PaymentMethod)
@@ -48,6 +53,7 @@ admin.site.register(Expense, ExpenseAdmin)
 admin.site.register(Investment, InvestmentAdmin)
 admin.site.register(Refund, RefundAdmin)
 admin.site.register(ExpenseTypeTag)
+admin.site.register(InvestmentPortfolio, InvestmentPortfolioAdmin)
 admin.site.register(Transaction, TransactionAdmin)
 
 admin.site.unregister(User)

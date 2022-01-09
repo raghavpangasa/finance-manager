@@ -159,24 +159,51 @@ class Expense(models.Model):
     tags = models.ManyToManyField(ExpenseTypeTag)
     comments = models.CharField(max_length=250, blank=True)
     payment_mode = models.ForeignKey(PaymentMethod, on_delete=models.CASCADE,related_name="payment_method",blank=True, null=True)
+    creation_time = models.DateField(blank=True, null=True)
 
     def __str__(self):
         return self.name 
 
     def calculate(self):
         current_month = MoneyTracker.objects.get(month=calendar.month_name[self.date.month], year=self.date.year)
-        old_expenses = Expense.objects.filter(date__year = current_month.year, date__month = list(calendar.month_name).index(current_month.month))
-        current_month.expenses = old_expenses.aggregate(Sum('amount'))["amount__sum"]
+        current_month.expenses += self.amount
         current_month.save()
 
     def save(self):
-        # self.calculate()
-        self.payment_mode.bank_account.debit(self.amount)
+        if not self.creation_time:
+            self.creation_time = date.today()
+            self.calculate()
+            self.payment_mode.bank_account.debit(self.amount)
         return super().save()
 
 @receiver(post_save,sender=Expense)
 def recalculate(sender, instance, created, **kwargs):
     instance.calculate()
+
+
+class InvestmentPortfolio(models.Model):
+    name = models.CharField(max_length=100)
+    details = models.TextField(max_length=500, blank=True)
+    invested = models.DecimalField(default=0,decimal_places=2, max_digits=100)
+    last_invested = models.DateField()
+    current_value = models.DecimalField(blank=True, null=True, decimal_places=2, max_digits=100)
+    last_updated = models.DateField(null=True, blank=True)
+    roi = models.DecimalField(decimal_places=2, max_digits=20, null=True, blank=True)
+    
+    def __str__(self):
+        return self.name
+
+    def invest(self, amount):
+        self.invested += amount
+        self.current_value += amount
+        self.save()
+
+    def save(self):
+        if self.current_value:
+            self.roi = round(((self.current_value - self.invested) / self.invested)*100,2)
+        self.last_updated = date.today()
+        return super().save()
+
 
 class Investment(models.Model):
     name = models.CharField(max_length=150, blank=True)
@@ -184,28 +211,28 @@ class Investment(models.Model):
     amount = models.DecimalField(max_digits=100, decimal_places=2)
     investment_type = models.CharField(choices=INVESTMENT_TYPE, default="OTHER", max_length=100)
     comments = models.CharField(max_length=250, blank=True)
+    portfolio = models.ForeignKey(InvestmentPortfolio, on_delete=models.CASCADE,related_name="investment_portfolio",blank=True, null=True)
     payment_mode = models.ForeignKey(PaymentMethod, on_delete=models.CASCADE,related_name="investment_payment_method",blank=True, null=True)
+    from_salary = models.BooleanField(default=True)
+    creation_time = models.DateField(blank=True, null=True)
     
     def __str__(self):
         return self.name
 
     def calculate(self):
         current_month = MoneyTracker.objects.get(month=calendar.month_name[self.date.month], year=self.date.year)
-        old_investments = Investment.objects.filter(date__year = current_month.year, date__month = list(calendar.month_name).index(current_month.month))
-        current_month.invested = old_investments.aggregate(Sum('amount'))["amount__sum"]
+        current_month.invested += self.amount
+        if not self.from_salary:
+            current_month.actual_inhand += self.amount
         current_month.save()
 
     def save(self):
-        self.payment_mode.bank_account.debit(self.amount)
+        if not self.creation_time:
+            if self.from_salary:
+                self.payment_mode.bank_account.debit(self.amount)
+            self.calculate()
+            self.portfolio.invest(self.amount)
         return super().save()
-    
-    def post_save(self):
-        self.calculate()
-        print("Post save")
-
-@receiver(post_save,sender=Investment)
-def recalculate(sender, instance, created, **kwargs):
-    instance.calculate()
 
 class Refund(models.Model):
     amount = models.DecimalField(max_digits=100, decimal_places=2)
