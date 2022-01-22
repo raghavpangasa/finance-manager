@@ -67,7 +67,7 @@ class BankAccount(models.Model):
 class Transaction(models.Model):
     from_bank = models.ForeignKey(BankAccount, on_delete=models.CASCADE,related_name="from_bank")
     to_bank = models.ForeignKey(BankAccount, on_delete=models.CASCADE,related_name="to_bank")
-    amount = models.IntegerField()
+    amount =  models.DecimalField(max_digits=100, decimal_places=2)
     transaction_date = models.DateField()
     creation_time = models.DateField()
 
