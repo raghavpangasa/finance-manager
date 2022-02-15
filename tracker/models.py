@@ -3,7 +3,7 @@ import calendar
 from django.db.models import Sum
 from django.db.models.deletion import CASCADE
 from django.db.models.signals import post_save
-from django.dispatch import  receiver
+from django.dispatch import receiver
 from datetime import date
 
 INVESTMENT_TYPE = (
@@ -22,27 +22,27 @@ EXPENSE_TYPE = (
 )
 
 MONTHS = (
-    ("January","January"),
-    ("February","February"),
-    ("March","March"),
-    ("April","April"),
-    ("May","May"),
-    ("June","June"),
-    ("July","July"),
-    ("August","August"),
-    ("September","September"),
-    ("October","October"),
-    ("November","November"),
-    ("December","December")
+    ("January", "January"),
+    ("February", "February"),
+    ("March", "March"),
+    ("April", "April"),
+    ("May", "May"),
+    ("June", "June"),
+    ("July", "July"),
+    ("August", "August"),
+    ("September", "September"),
+    ("October", "October"),
+    ("November", "November"),
+    ("December", "December")
 )
 
 
 PAYMENT_METHODS = (
-    ("Debit Card","Debit Card"),
-    ("Net Banking","Net Banking"),
-    ("UPI","UPI"),
-    ("NEFT/IMPS","NEFT/IMPS"),
-    ("Direct","Direct")
+    ("Debit Card", "Debit Card"),
+    ("Net Banking", "Net Banking"),
+    ("UPI", "UPI"),
+    ("NEFT/IMPS", "NEFT/IMPS"),
+    ("Direct", "Direct")
 )
 
 
@@ -64,10 +64,13 @@ class BankAccount(models.Model):
     # def get_total(self):
     #     return BankAccount.objects.all().aggregate(Sum('balance'))["balance__sum"]
 
+
 class Transaction(models.Model):
-    from_bank = models.ForeignKey(BankAccount, on_delete=models.CASCADE,related_name="from_bank")
-    to_bank = models.ForeignKey(BankAccount, on_delete=models.CASCADE,related_name="to_bank")
-    amount =  models.DecimalField(max_digits=100, decimal_places=2)
+    from_bank = models.ForeignKey(
+        BankAccount, on_delete=models.CASCADE, related_name="from_bank")
+    to_bank = models.ForeignKey(
+        BankAccount, on_delete=models.CASCADE, related_name="to_bank")
+    amount = models.DecimalField(max_digits=100, decimal_places=2)
     transaction_date = models.DateField()
     creation_time = models.DateField()
 
@@ -79,7 +82,7 @@ class Transaction(models.Model):
         return super().save()
 
 
-def new_transaction(to_bank,from_bank,amount):
+def new_transaction(to_bank, from_bank, amount):
     new_transaction = Transaction()
     new_transaction.from_bank = from_bank
     new_transaction.to_bank = to_bank
@@ -87,20 +90,27 @@ def new_transaction(to_bank,from_bank,amount):
     new_transaction.transaction_date = date.today()
     new_transaction.save()
 
+
 class PaymentMethod(models.Model):
-    type = models.CharField(max_length=150, choices=PAYMENT_METHODS, default="Debit Card")
-    bank_account = models.ForeignKey(BankAccount, on_delete=models.CASCADE,related_name="bank_payment_method")
-    
+    type = models.CharField(
+        max_length=150, choices=PAYMENT_METHODS, default="Debit Card")
+    bank_account = models.ForeignKey(
+        BankAccount, on_delete=models.CASCADE, related_name="bank_payment_method")
+
     def __str__(self):
         return self.type + " - " + self.bank_account.bank
+
 
 class SalaryModel(models.Model):
     in_hand_salary = models.IntegerField()
     name_of_the_company = models.CharField(max_length=150)
     position = models.CharField(max_length=100)
-    amount_for_needs = models.DecimalField(max_digits=100, decimal_places=2, null=True,blank=True)
-    amount_for_investments = models.DecimalField(max_digits=100, decimal_places=2,null=True, blank=True)
-    amount_for_savings = models.DecimalField(max_digits=100, decimal_places=2, null=True, blank=True)
+    amount_for_needs = models.DecimalField(
+        max_digits=100, decimal_places=2, null=True, blank=True)
+    amount_for_investments = models.DecimalField(
+        max_digits=100, decimal_places=2, null=True, blank=True)
+    amount_for_savings = models.DecimalField(
+        max_digits=100, decimal_places=2, null=True, blank=True)
     start_month = models.DateField()
     end_month = models.DateField(null=True, blank=True)
 
@@ -118,12 +128,14 @@ class MoneyTracker(models.Model):
     month = models.CharField(max_length=150, choices=MONTHS, default="January")
     year = models.IntegerField(default=2021)
     actual_inhand = models.DecimalField(max_digits=100, decimal_places=2)
-    salary_model = models.ForeignKey(SalaryModel, on_delete=models.CASCADE,related_name="month_tracker")
-    expenses = models.DecimalField(max_digits=100, decimal_places=2,default=0)
-    invested = models.DecimalField(max_digits=100, decimal_places=2,default=0)
-    saved = models.DecimalField(max_digits=100, decimal_places=2,default=0)
+    salary_model = models.ForeignKey(
+        SalaryModel, on_delete=models.CASCADE, related_name="month_tracker")
+    expenses = models.DecimalField(max_digits=100, decimal_places=2, default=0)
+    invested = models.DecimalField(max_digits=100, decimal_places=2, default=0)
+    saved = models.DecimalField(max_digits=100, decimal_places=2, default=0)
     creation_time = models.DateField(blank=True, null=True)
-    salary_account = models.ForeignKey(BankAccount, on_delete=CASCADE,related_name="salary_account",blank=True, null=True)
+    salary_account = models.ForeignKey(
+        BankAccount, on_delete=CASCADE, related_name="salary_account", blank=True, null=True)
 
     def __str__(self):
         return self.month + ", " + str(self.year)
@@ -135,13 +147,14 @@ class MoneyTracker(models.Model):
     def undo_distribute(self):
         for bank in BankAccount.objects.all().exclude(bank=self.salary_account.bank):
             new_transaction(self.salary_account, bank, bank.monthly_inflow)
-    
+
     def save(self):
         self.saved = self.actual_inhand - self.expenses - self.invested
         if not self.creation_time:
             self.creation_time = date.today()
             self.salary_account.credit(self.actual_inhand)
         return super().save()
+
 
 class ExpenseTypeTag(models.Model):
     name = models.CharField(max_length=20)
@@ -150,22 +163,24 @@ class ExpenseTypeTag(models.Model):
         return self.name
 
 
-
 class Expense(models.Model):
     name = models.CharField(max_length=150, blank=True)
     date = models.DateField()
     amount = models.DecimalField(max_digits=100, decimal_places=2)
-    expense_type = models.CharField(choices=EXPENSE_TYPE, default="Needs", max_length=100)
+    expense_type = models.CharField(
+        choices=EXPENSE_TYPE, default="Needs", max_length=100)
     tags = models.ManyToManyField(ExpenseTypeTag)
     comments = models.CharField(max_length=250, blank=True)
-    payment_mode = models.ForeignKey(PaymentMethod, on_delete=models.CASCADE,related_name="payment_method",blank=True, null=True)
+    payment_mode = models.ForeignKey(
+        PaymentMethod, on_delete=models.CASCADE, related_name="payment_method", blank=True, null=True)
     creation_time = models.DateField(blank=True, null=True)
 
     def __str__(self):
-        return self.name 
+        return self.name
 
     def calculate(self):
-        current_month = MoneyTracker.objects.get(month=calendar.month_name[self.date.month], year=self.date.year)
+        current_month = MoneyTracker.objects.get(
+            month=calendar.month_name[self.date.month], year=self.date.year)
         current_month.expenses += self.amount
         current_month.save()
 
@@ -176,7 +191,8 @@ class Expense(models.Model):
             self.payment_mode.bank_account.debit(self.amount)
         return super().save()
 
-@receiver(post_save,sender=Expense)
+
+@receiver(post_save, sender=Expense)
 def recalculate(sender, instance, created, **kwargs):
     instance.calculate()
 
@@ -184,12 +200,14 @@ def recalculate(sender, instance, created, **kwargs):
 class InvestmentPortfolio(models.Model):
     name = models.CharField(max_length=100)
     details = models.TextField(max_length=500, blank=True)
-    invested = models.DecimalField(default=0,decimal_places=2, max_digits=100)
+    invested = models.DecimalField(default=0, decimal_places=2, max_digits=100)
     last_invested = models.DateField()
-    current_value = models.DecimalField(blank=True, null=True, decimal_places=2, max_digits=100)
+    current_value = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=100)
     last_updated = models.DateField(null=True, blank=True)
-    roi = models.DecimalField(decimal_places=2, max_digits=20, null=True, blank=True)
-    
+    roi = models.DecimalField(
+        decimal_places=2, max_digits=20, null=True, blank=True)
+
     def __str__(self):
         return self.name
 
@@ -200,7 +218,8 @@ class InvestmentPortfolio(models.Model):
 
     def save(self):
         if self.current_value:
-            self.roi = round(((self.current_value - self.invested) / self.invested)*100,2)
+            self.roi = round(
+                ((self.current_value - self.invested) / self.invested)*100, 2)
         self.last_updated = date.today()
         return super().save()
 
@@ -209,18 +228,22 @@ class Investment(models.Model):
     name = models.CharField(max_length=150, blank=True)
     date = models.DateField()
     amount = models.DecimalField(max_digits=100, decimal_places=2)
-    investment_type = models.CharField(choices=INVESTMENT_TYPE, default="OTHER", max_length=100)
+    investment_type = models.CharField(
+        choices=INVESTMENT_TYPE, default="OTHER", max_length=100)
     comments = models.CharField(max_length=250, blank=True)
-    portfolio = models.ForeignKey(InvestmentPortfolio, on_delete=models.CASCADE,related_name="investment_portfolio",blank=True, null=True)
-    payment_mode = models.ForeignKey(PaymentMethod, on_delete=models.CASCADE,related_name="investment_payment_method",blank=True, null=True)
+    portfolio = models.ForeignKey(InvestmentPortfolio, on_delete=models.CASCADE,
+                                  related_name="investment_portfolio", blank=True, null=True)
+    payment_mode = models.ForeignKey(PaymentMethod, on_delete=models.CASCADE,
+                                     related_name="investment_payment_method", blank=True, null=True)
     from_salary = models.BooleanField(default=True)
     creation_time = models.DateField(blank=True, null=True)
-    
+
     def __str__(self):
         return self.name
 
     def calculate(self):
-        current_month = MoneyTracker.objects.get(month=calendar.month_name[self.date.month], year=self.date.year)
+        current_month = MoneyTracker.objects.get(
+            month=calendar.month_name[self.date.month], year=self.date.year)
         current_month.invested += self.amount
         if not self.from_salary:
             current_month.actual_inhand += self.amount
@@ -234,10 +257,12 @@ class Investment(models.Model):
             self.portfolio.invest(self.amount)
         return super().save()
 
+
 class Refund(models.Model):
     amount = models.DecimalField(max_digits=100, decimal_places=2)
     source = models.CharField(max_length=250)
-    bank_account = models.ForeignKey(BankAccount, on_delete=CASCADE,related_name="refund_bank_account",blank=True, null=True)
+    bank_account = models.ForeignKey(
+        BankAccount, on_delete=CASCADE, related_name="refund_bank_account", blank=True, null=True)
     date = models.DateField()
     creation_time = models.DateField(null=True, blank=True)
 
@@ -246,3 +271,5 @@ class Refund(models.Model):
             self.creation_time = self.date
             self.bank_account.credit(self.amount)
         return super().save()
+
+# Hello@107!
