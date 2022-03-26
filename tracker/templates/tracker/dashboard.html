@@ -45,6 +45,10 @@
             width: 27rem;
             margin-bottom: 1rem;
         }
+        .danger{
+            font-weight: bold;
+            color: red;
+        }
     </style>
 {% endblock js_files %}
 
@@ -83,8 +87,14 @@
                     </div>
                     <div class="float-child-monthly" id="monthly-data">
                         <p> Total Invested : Rs. {{month.data.invested}} </p>
-                        <p> Total Spent : Rs. {{month.data.spent}} </p>
-                        <p> Total Saved : Rs. {{month.data.saved}} </p>
+                        <p {% if month.spend_danger %}
+                         class="danger"
+                        {% else %}
+                        {% endif %}> Total Spent : Rs. {{month.data.spent}} </p>
+                        <p {% if month.saved_danger %}
+                        class="danger"
+                       {% else %}
+                       {% endif %}> Total Saved : Rs. {{month.data.saved}} </p>
                     </div>
                 </div>
             </div>

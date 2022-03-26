@@ -5,19 +5,19 @@ from django.db.models import Sum
 from django.contrib.auth.decorators import login_required
 from datetime import datetime
 from django.contrib import messages
-
+import calendar
 
 def get_total_report():
     total_actual_invested = MoneyTracker.objects.aggregate(Sum('invested'))[
         "invested__sum"]
-    total_invested = MoneyTracker.objects.exclude(
-        month="August", year=2021).aggregate(Sum('invested'))["invested__sum"]
+    total_invested = MoneyTracker.objects.aggregate(Sum('invested'))[
+        "invested__sum"]
     total_spent = MoneyTracker.objects.aggregate(Sum('expenses'))[
         "expenses__sum"]
-    total_saved = MoneyTracker.objects.aggregate(Sum('saved'))["saved__sum"]
     total_inhand = MoneyTracker.objects.aggregate(
         Sum('actual_inhand'))["actual_inhand__sum"]
-    num_months = len(MoneyTracker.objects.all()) - 1
+    total_saved = total_inhand - total_invested - total_spent
+    num_months = len(MoneyTracker.objects.all())
     data = {
         "total": {
             "total_investment": total_actual_invested,
@@ -38,33 +38,72 @@ def get_total_report():
     }
     return data
 
+def get_month_number(month_name):
+    datetime_object = datetime.strptime(month_name, "%B")
+    return datetime_object.month
+
+def get_month_name(month_number):
+    datetime_object = datetime.strptime(str(month_number), "%m")
+    month_name = datetime_object.strftime("%B")
+    return month_name
+
+def get_previous_month(month,year):
+    m = get_month_number(month)
+    if m != 1:
+        prev_m = m-1
+        prev_y = year
+    else:
+        prev_m = m
+        prev_y = year - 1
+    return get_month_name(prev_m), prev_y    
+
 
 def get_specific_data(selected_month, selected_year):
+    saved_danger = False
+    spend_danger = False
     try:
         tracker_object = MoneyTracker.objects.get(
             month=selected_month, year=selected_year)
+        try:
+            prev_m, prev_y = get_previous_month(selected_month, selected_year)
+            previous_tracker = MoneyTracker.objects.get(
+                month=prev_m, year=prev_y)
+        except Exception as e:
+            print(e)
+            previous_tracker = None
+        saved = tracker_object.actual_inhand - \
+            tracker_object.invested - tracker_object.expenses
+        if saved < 0.4 * float(tracker_object.actual_inhand):
+            saved_danger = True
+        if previous_tracker:
+            if tracker_object.expenses > float(previous_tracker.saved)*0.5:
+                spend_danger = True
         data = {
             "invested": tracker_object.invested,
             "spent": tracker_object.expenses,
-            "saved": tracker_object.saved,
+            "saved": saved
         }
-    except:
+    except Exception as e:
+        print(e)
         data = None
-    return data
+    return data, saved_danger, spend_danger
 
 
 def get_monthly_report():
-    all_data = MoneyTracker.objects.all().exclude(
-        month="August", year=2021).order_by('-creation_time')
+    all_data = MoneyTracker.objects.all().order_by('-creation_time')
     data = []
     for monthly_tracker in all_data:
         data_key = monthly_tracker.month + " - " + str(monthly_tracker.year)
         var_key = monthly_tracker.month.lower() + "_" + str(monthly_tracker.year)
+        response_data, saved_danger, spend_danger = get_specific_data(monthly_tracker.month, monthly_tracker.year)
         data.append({
             'name': data_key,
             'var_name': var_key,
-            "data": get_specific_data(monthly_tracker.month, monthly_tracker.year)
+            "data": response_data,
+            "saved_danger": saved_danger,
+            "spend_danger": spend_danger
         })
+    print(data)
     return data
 
 
@@ -102,8 +141,7 @@ def get_investments_by_type(investments):
 
 
 def get_investments_by_month(investments):
-    all_data = MoneyTracker.objects.exclude(
-        month="August", year=2021).order_by('-creation_time')
+    all_data = MoneyTracker.objects.order_by('-creation_time')
     data = []
     for monthly_tracker in all_data:
         filtered_investments = investments.filter(date__year=monthly_tracker.year, date__month=list(
@@ -157,8 +195,7 @@ def get_expenses_by_tag(expenses):
 def get_expense_summary(request):
     all_expenses = Expense.objects.all()
     data = []
-    all_data = MoneyTracker.objects.exclude(
-        month="August", year=2021).order_by('-creation_time')
+    all_data = MoneyTracker.objects.order_by('-creation_time')
     for monthly_tracker in all_data:
         filtered_expenses = all_expenses.filter(date__year=monthly_tracker.year, date__month=list(
             calendar.month_name).index(monthly_tracker.month))
