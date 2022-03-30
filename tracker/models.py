@@ -191,7 +191,6 @@ class Expense(models.Model):
     def save(self):
         if not self.creation_time:
             self.creation_time = date.today()
-            self.calculate()
             self.payment_mode.bank_account.debit(self.amount)
         return super().save()
 

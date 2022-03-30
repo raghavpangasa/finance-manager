@@ -103,7 +103,6 @@ def get_monthly_report():
             "saved_danger": saved_danger,
             "spend_danger": spend_danger
         })
-    print(data)
     return data
 
 
