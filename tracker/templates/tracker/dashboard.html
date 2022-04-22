@@ -103,10 +103,14 @@
 
 
     <script>
+        var saved = {{overall_data.total.total_spent}};
+        if(saved<0){
+            saved = 0;
+        }
         var chart_data = [
             {label: "Invested", y: {{overall_data.total.total_investment}} },
             {label: "Spent", y: {{overall_data.total.total_spent}}},
-            {label: "Saved", y: {% if overall_data.total.total_saved > 0  %}{{overall_data.total.total_saved}}{% else %}0{% endif %}}
+            {label: "Saved", y: saved}
         ];
 
         var chart = new CanvasJS.Chart("chart-container", {
@@ -132,7 +136,7 @@
                     dataPoints:  [
                             {label : "Invested", y: {{month.data.invested}} },
                             {label : "Spent", y: {{month.data.spent}} },
-                            {label : "Saved", y: {% if overall_data.total.total_saved > 0  %}{{month.data.saved}}{% else %}0{% endif %} }
+                            {label : "Saved", y: {% if month.data.saved > 0  %}{{month.data.saved}}{% else %}0{% endif %} }
                             ]
                     }]
                 });

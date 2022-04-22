@@ -126,7 +126,7 @@ class SalaryModel(models.Model):
 
 class MoneyTracker(models.Model):
     month = models.CharField(max_length=150, choices=MONTHS, default="January")
-    year = models.IntegerField(default=2021)
+    year = models.IntegerField(default=2022)
     actual_inhand = models.DecimalField(max_digits=100, decimal_places=2)
     salary_model = models.ForeignKey(
         SalaryModel, on_delete=models.CASCADE, related_name="month_tracker")

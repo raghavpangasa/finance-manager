@@ -7,6 +7,7 @@ from datetime import datetime
 from django.contrib import messages
 import calendar
 
+
 def get_total_report():
     total_actual_invested = MoneyTracker.objects.aggregate(Sum('invested'))[
         "invested__sum"]
@@ -38,16 +39,19 @@ def get_total_report():
     }
     return data
 
+
 def get_month_number(month_name):
     datetime_object = datetime.strptime(month_name, "%B")
     return datetime_object.month
+
 
 def get_month_name(month_number):
     datetime_object = datetime.strptime(str(month_number), "%m")
     month_name = datetime_object.strftime("%B")
     return month_name
 
-def get_previous_month(month,year):
+
+def get_previous_month(month, year):
     m = get_month_number(month)
     if m != 1:
         prev_m = m-1
@@ -55,7 +59,7 @@ def get_previous_month(month,year):
     else:
         prev_m = m
         prev_y = year - 1
-    return get_month_name(prev_m), prev_y    
+    return get_month_name(prev_m), prev_y
 
 
 def get_specific_data(selected_month, selected_year):
@@ -69,11 +73,10 @@ def get_specific_data(selected_month, selected_year):
             previous_tracker = MoneyTracker.objects.get(
                 month=prev_m, year=prev_y)
         except Exception as e:
-            print(e)
             previous_tracker = None
         saved = tracker_object.actual_inhand - \
             tracker_object.invested - tracker_object.expenses
-        if saved < 0.4 * float(tracker_object.actual_inhand):
+        if saved < 0.3 * float(tracker_object.actual_inhand):
             saved_danger = True
         if previous_tracker:
             if tracker_object.expenses > float(previous_tracker.saved)*0.5:
@@ -95,7 +98,8 @@ def get_monthly_report():
     for monthly_tracker in all_data:
         data_key = monthly_tracker.month + " - " + str(monthly_tracker.year)
         var_key = monthly_tracker.month.lower() + "_" + str(monthly_tracker.year)
-        response_data, saved_danger, spend_danger = get_specific_data(monthly_tracker.month, monthly_tracker.year)
+        response_data, saved_danger, spend_danger = get_specific_data(
+            monthly_tracker.month, monthly_tracker.year)
         data.append({
             'name': data_key,
             'var_name': var_key,
