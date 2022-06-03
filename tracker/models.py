@@ -61,8 +61,6 @@ class BankAccount(models.Model):
     def debit(self, amount):
         self.balance -= amount
         self.save()
-    # def get_total(self):
-    #     return BankAccount.objects.all().aggregate(Sum('balance'))["balance__sum"]
 
 
 class Transaction(models.Model):
@@ -98,7 +96,7 @@ class PaymentMethod(models.Model):
         BankAccount, on_delete=models.CASCADE, related_name="bank_payment_method")
 
     def __str__(self):
-        return self.type + " - " + self.bank_account.bank
+        return self.bank_account.bank +  " - " + self.type
 
 
 class SalaryModel(models.Model):
