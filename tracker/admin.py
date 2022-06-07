@@ -36,14 +36,14 @@ class MoneyTrackerAdmin(admin.ModelAdmin):
 
 class ExpenseAdmin(admin.ModelAdmin):
     list_display = ("name", "expense_type", "amount", "comments")
-    list_filter = ("expense_type", "date", "tags")
+    list_filter = ("expense_type", "date", "tags","payment_mode")
     change_list_template = "admin/add_admin_buttons.html"
     exclude = ('creation_time',)
 
 
 class InvestmentAdmin(admin.ModelAdmin):
     list_display = ("name", "investment_type", "amount", "comments")
-    list_filter = ("investment_type", "date")
+    list_filter = ("investment_type", "date","portfolio")
     change_list_template = "admin/add_admin_buttons.html"
     exclude = ('creation_time',)
 

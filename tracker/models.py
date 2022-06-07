@@ -61,8 +61,6 @@ class BankAccount(models.Model):
     def debit(self, amount):
         self.balance -= amount
         self.save()
-    # def get_total(self):
-    #     return BankAccount.objects.all().aggregate(Sum('balance'))["balance__sum"]
 
 
 class Transaction(models.Model):
@@ -98,7 +96,7 @@ class PaymentMethod(models.Model):
         BankAccount, on_delete=models.CASCADE, related_name="bank_payment_method")
 
     def __str__(self):
-        return self.type + " - " + self.bank_account.bank
+        return self.bank_account.bank +  " - " + self.type
 
 
 class SalaryModel(models.Model):
@@ -126,7 +124,7 @@ class SalaryModel(models.Model):
 
 class MoneyTracker(models.Model):
     month = models.CharField(max_length=150, choices=MONTHS, default="January")
-    year = models.IntegerField(default=2021)
+    year = models.IntegerField(default=2022)
     actual_inhand = models.DecimalField(max_digits=100, decimal_places=2)
     salary_model = models.ForeignKey(
         SalaryModel, on_delete=models.CASCADE, related_name="month_tracker")
@@ -179,15 +177,18 @@ class Expense(models.Model):
         return self.name
 
     def calculate(self):
-        current_month = MoneyTracker.objects.get(
-            month=calendar.month_name[self.date.month], year=self.date.year)
-        current_month.expenses += self.amount
-        current_month.save()
+        try:
+            current_month = MoneyTracker.objects.get(
+                month=calendar.month_name[self.date.month], year=self.date.year)
+            current_month.expenses += self.amount
+            current_month.save()
+        except:
+            print("No month found ", self.date)
+            pass
 
     def save(self):
         if not self.creation_time:
             self.creation_time = date.today()
-            self.calculate()
             self.payment_mode.bank_account.debit(self.amount)
         return super().save()
 
@@ -242,12 +243,16 @@ class Investment(models.Model):
         return self.name
 
     def calculate(self):
-        current_month = MoneyTracker.objects.get(
-            month=calendar.month_name[self.date.month], year=self.date.year)
-        current_month.invested += self.amount
-        if not self.from_salary:
-            current_month.actual_inhand += self.amount
-        current_month.save()
+        try:
+            current_month = MoneyTracker.objects.get(
+                month=calendar.month_name[self.date.month], year=self.date.year)
+            current_month.invested += self.amount
+            if not self.from_salary:
+                current_month.actual_inhand += self.amount
+            current_month.save()
+        except:
+            print("Month not found ", self.date)
+            pass
 
     def save(self):
         if not self.creation_time:
@@ -258,6 +263,11 @@ class Investment(models.Model):
         return super().save()
 
 
+REFUND_TYPE = (
+    ("Refund","Refund"),
+    ("Returns", "Returns")
+)
+
 class Refund(models.Model):
     amount = models.DecimalField(max_digits=100, decimal_places=2)
     source = models.CharField(max_length=250)
@@ -265,11 +275,25 @@ class Refund(models.Model):
         BankAccount, on_delete=CASCADE, related_name="refund_bank_account", blank=True, null=True)
     date = models.DateField()
     creation_time = models.DateField(null=True, blank=True)
+    refund_type = models.CharField(choices=REFUND_TYPE, default="Refund", max_length=100)
+
+    def update_tracker(self):
+        try:
+            current_month = MoneyTracker.objects.get(
+                month=calendar.month_name[self.date.month], year=self.date.year)
+            if self.refund_type == "Refund":
+                current_month.expenses -= self.amount
+            else:
+                current_month.actual_inhand += self.amount
+            current_month.save()
+        except:
+            pass
 
     def save(self):
         if not self.creation_time:
             self.creation_time = self.date
             self.bank_account.credit(self.amount)
+            self.update_tracker()
         return super().save()
 
 # Hello@107!
